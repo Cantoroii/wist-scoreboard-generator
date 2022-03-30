@@ -1,3 +1,4 @@
+import { Player } from './models/player.model';
 import { Injectable } from '@angular/core';
 import { Store, StoreConfig } from '@datorama/akita';
 import { GameSettingsState } from './game-settings.state';
@@ -11,16 +12,29 @@ export class GameSettingsStore extends Store<GameSettingsState> {
     super(createInitialState());
   }
 
+  private getPlayerIdentifier(newPlayerName?: string, playerList?: Player[]) {
+    let playerIdentifier = (newPlayerName?.length ?? 0) > 0
+                            ? newPlayerName![0].toLocaleUpperCase()
+                            : '';
+    let index = 2;
+    // While you still find players with the same identifier
+    while (playerList?.find(element => element.playerIdentifier == playerIdentifier)) {
+      playerIdentifier = newPlayerName!.slice(0, index++); // Add a new letter
+      if (index > (newPlayerName?.length ?? 0) + 1){ // If you've already taken all the possible letters
+        playerIdentifier = '';
+        break;
+      }
+    }
+    return playerIdentifier;
+  }
+
   public setNewPlayerName(newPlayerName?: string) {
     this.update((state) => {
       return {
         newPlayer: {
           ...state.newPlayer,
           name: newPlayerName ?? '',
-          playerIdentifier:
-            (newPlayerName?.length ?? 0) > 0
-              ? newPlayerName![0].toLocaleUpperCase()
-              : '',
+          playerIdentifier: this.getPlayerIdentifier(newPlayerName, state.players)
         },
       };
     });
